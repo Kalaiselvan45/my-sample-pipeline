@@ -1,50 +1,116 @@
-version: 0.2
-batch:
-  fast-fail: true
-  build-graph:
-    - identifier: build_amd64
-      env:
-        image: aws/codebuild/standard:7.0
-        type: LINUX_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-        variables:
-          ARCH: amd64
-      ignore-failure: false
-    - identifier: build_arm64
-      env:
-        image: aws/codebuild/standard:7.0
-        type: ARM_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-        variables:
-          ARCH: arm64
-      ignore-failure: false
-    - identifier: create_manifest
-      env:
-        image: aws/codebuild/standard:7.0
-        type: ARM_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-      depend-on:
-        - build_amd64
-        - build_arm64
-      ignore-failure: false
-phases:
-  pre_build:
-    commands:
-      - echo "Logging in to Amazon ECR"
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
-  build:
-    commands:
-      - echo "Building for $ARCH in $CODEBUILD_BATCH_BUILD_IDENTIFIER"
-      - |
-        if [ "$CODEBUILD_BATCH_BUILD_IDENTIFIER" = "create_manifest" ]; then
-          docker manifest create $ECR_REPOSITORY:$IMAGE_TAG \
-            --amend $ECR_REPOSITORY:$IMAGE_TAG-amd64 \
-            --amend $ECR_REPOSITORY:$IMAGE_TAG-arm64
-          docker manifest push $ECR_REPOSITORY:$IMAGE_TAG
-        else
-          docker build --build-arg ARCH=$ARCH -t $ECR_REPOSITORY:$IMAGE_TAG-$ARCH .
-          docker push $ECR_REPOSITORY:$IMAGE_TAG-$ARCH
-        fi
-  post_build:
-    commands:
-      - echo "Build completed on `date`"
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Sample CodeBuild pipeline to test ConcurrentBuildLimit and MaximumBuildsAllowed"
+
+Parameters:
+  GitHubOwner:
+    Type: String
+    Description: "GitHub repository owner (username or organization)"
+    Default: "your-username"
+  GitHubRepo:
+    Type: String
+    Description: "GitHub repository name"
+    Default: "my-sample-pipeline"
+  GitHubToken:
+    Type: String
+    Description: "GitHub personal access token (store in AWS Secrets Manager or Parameter Store)"
+    NoEcho: true
+  ECRRepository:
+    Type: String
+    Description: "ECR repository URI (e.g., 123456789012.dkr.ecr.us-west-2.amazonaws.com/my-sample-image)"
+    Default: "123456789012.dkr.ecr.us-west-2.amazonaws.com/my-sample-image"
+
+Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: "arn:aws:s3:::codebuild-*"
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: sample-pipeline
+      Description: "Sample pipeline to test CBL and MBA"
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      ConcurrentBuildLimit: 1  # Only one pipeline run at a time
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: "refs/heads/main"
+        BuildType: BUILD_BATCH
+      Artifacts:
+        Type: NO_ARTIFACTS
+      TimeoutInMinutes: 10
+      Environment:
+        Type: ARM_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_REGION
+            Value: us-west-2
+            Type: PLAINTEXT
+          - Name: ECR_REPOSITORY
+            Value: !Ref ECRRepository
+            Type: PLAINTEXT
+          - Name: IMAGE_TAG
+            Value: "v1.0.0"
+            Type: PLAINTEXT
+      Source:
+        Type: GITHUB
+        Location: !Sub "https://github.com/${GitHubOwner}/${GitHubRepo}.git"
+        GitCloneDepth: 1
+        BuildSpec: buildspec.yaml
+        Auth:
+          Type: OAUTH
+      SourceVersion: main
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+      Cache:
+        Type: NO_CACHE
+      BuildBatchConfig:
+        ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+        Restrictions:
+          MaximumBuildsAllowed: 4  # Allow up to 4 parallel builds in the batch
+          ComputeTypesAllowed:
+            - BUILD_GENERAL1_SMALL
+      Visibility: PRIVATE
+
+Outputs:
+  CodeBuildProjectName:
+    Description: "CodeBuild Project name"
+    Value: !Ref CodeBuildProject
