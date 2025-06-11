@@ -1,0 +1,4 @@
+FROM alpine:latest
+ARG ARCH
+RUN echo "Hello, World! Built for ${ARCH}" > /message.txt
+CMD ["cat", "/message.txt"]
