@@ -90,6 +90,7 @@ Resources:
           - Name: NODE_ENV
             Type: PLAINTEXT
             Value: production
+      ConcurrentBuildLimit: 1
       Source:
         Type: GITHUB
         Location: !Sub 'https://github.com/${GitHubRepositoryOwner}/${GitHubRepository}'
@@ -100,6 +101,8 @@ Resources:
             build:
               commands:
                 - $CODEBUILD_SRC_DIR/aws_ci_cd/build.sh
+            finally:
+                - $CODEBUILD_SRC_DIR/aws_ci_cd/slack.sh
 
       LogsConfig:
         CloudWatchLogs:
