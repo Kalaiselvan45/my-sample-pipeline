@@ -97,13 +97,20 @@ Resources:
         GitCloneDepth: 1
         BuildSpec: |
           version: 0.2
-          phases:
-            build:
-              commands:
-                - $CODEBUILD_SRC_DIR/aws_ci_cd/build.sh
-            finally:
-                - $CODEBUILD_SRC_DIR/aws_ci_cd/slack.sh
-
+          batch:
+            fast-fail: true
+            build-list:
+              - identifier: build1
+                buildspec: aws_ci_cd/buildspec-build1.yml
+              - identifier: build2
+                buildspec: aws_ci_cd/buildspec-build2.yml
+      BuildBatchConfig:
+          ServiceRole: !GetAtt CodeBuildRole.Arn
+          TimeoutInMins: 60
+          CombineArtifacts: true
+          BatchReportMode: REPORT_INDIVIDUAL_BUILDS
+          Restrictions:
+            MaximumBuildsAllowed: 2
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
