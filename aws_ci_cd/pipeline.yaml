@@ -1,46 +1,30 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to create a basic CodeBuild project for a CI/CD pipeline
+Description: AWS CodeBuild project with GitHub source and webhook
 
 Parameters:
-  ApplicationName:
+  ProjectName:
     Type: String
-    Description: Name of the application (used to name resources)
-    Default: MyCodeBuildApp
-    AllowedPattern: '[A-Za-z0-9-]+'
-  GitHubRepositoryOwner:
+    Default: MyGitHubCodeBuildProject
+    Description: Name of the CodeBuild project
+  GitHubOwner:
     Type: String
-    Description: GitHub username of the repository owner
-  GitHubRepository:
+    Description: GitHub repository owner (e.g., username or organization)
+  GitHubRepo:
     Type: String
-    Description: Name of the GitHub repository
+    Description: GitHub repository name
   GitHubBranch:
     Type: String
-    Description: Branch to monitor for changes
     Default: main
-  GitHubOAuthTokenSecretName:
+    Description: Branch to trigger builds
+  GitHubOAuthTokenSecretArn:
     Type: String
-    Description: Name of the Secrets Manager secret containing the GitHub OAuth token
+    Description: ARN of the Secrets Manager secret containing the GitHub OAuth token
 
 Resources:
-  # S3 Bucket for CodeBuild artifacts
-  ArtifactS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub 'codebuild-${ApplicationName}-${AWS::AccountId}'
-      VersioningConfiguration:
-        Status: Enabled
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-
   # IAM Role for CodeBuild
   CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${ApplicationName}-CodeBuild-Role'
-      Path: /
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -49,7 +33,7 @@ Resources:
               Service: codebuild.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: !Sub '${ApplicationName}-CodeBuild-Policy'
+        - PolicyName: CodeBuildPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -58,73 +42,45 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${ApplicationName}:*'
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:GetObjectVersion
-                Resource: !Sub 'arn:aws:s3:::${ArtifactS3Bucket}/*'
-              - Effect: Allow
-                Action:
-                  - secretsmanager:GetSecretValue
-                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${GitHubOAuthTokenSecretName}-*'
+                Resource: '*'
 
-  # CodeBuild Project
+# CodeBuild Project
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: !Sub '${ApplicationName}-Build'
-      Description: !Sub 'Build project for ${ApplicationName}'
+      Name: !Ref ProjectName
       ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source:
+        Type: GITHUB
+        Location: !Sub https://github.com/${GitHubOwner}/${GitHubRepo}.git
+        GitCloneDepth: 1
+        Auth:
+          Type: OAUTH
+          Resource: !Ref GitHubOAuthTokenSecretArn
+      SourceVersion: !Ref GitHubBranch
       Artifacts:
         Type: S3
-        Location: !Ref ArtifactS3Bucket
-        Name: BuildOutput
+        Location: !Ref ArtifactBucketName
+        Name: build-output
         Packaging: ZIP
       Environment:
         Type: LINUX_CONTAINER
-        Image: aws/codebuild/standard:5.0
         ComputeType: BUILD_GENERAL1_SMALL
-        EnvironmentVariables:
-          - Name: NODE_ENV
-            Type: PLAINTEXT
-            Value: production
-      ConcurrentBuildLimit: 1
-      Source:
-        Type: GITHUB
-        Location: !Sub 'https://github.com/${GitHubRepositoryOwner}/${GitHubRepository}'
-        GitCloneDepth: 1
-        BuildSpec: |
-          version: 0.2
-          batch:
-            fast-fail: true
-            build-list:
-              - identifier: build1
-                buildspec: aws_ci_cd/buildspec-build1.yml
-              - identifier: build2
-                buildspec: aws_ci_cd/buildspec-build2.yml
-      BuildBatchConfig:
-          ServiceRole: !GetAtt CodeBuildRole.Arn
-          TimeoutInMins: 60
-          CombineArtifacts: true
-          BatchReportMode: REPORT_INDIVIDUAL_BUILDS
-          Restrictions:
-            MaximumBuildsAllowed: 2
+        Image: aws/codebuild/standard:5.0
+        PrivilegedMode: false
+      TimeoutInMinutes: 60
       LogsConfig:
         CloudWatchLogs:
           Status: ENABLED
-          GroupName: !Sub '${ApplicationName}-Build-Logs'
-      TimeoutInMinutes: 60
-      QueuedTimeoutInMinutes: 480
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: !Sub refs/heads/${GitHubBranch}
 
 Outputs:
   CodeBuildProjectName:
     Description: Name of the CodeBuild project
     Value: !Ref CodeBuildProject
-  ArtifactBucketName:
-    Description: Name of the S3 bucket for artifacts
-    Value: !Ref ArtifactS3Bucket
-  CodeBuildRoleArn:
-    Description: ARN of the CodeBuild IAM role
-    Value: !GetAtt CodeBuildRole.Arn
