@@ -1,5 +1,12 @@
 version: 0.2
+
 phases:
+  install:
+    runtime-versions:
+      python: 3.x
   build:
     commands:
-      - echo "Running build"
+      - echo "Triggering Step Function..."
+      - aws stepfunctions start-execution \
+          --state-machine-arn arn:aws:states:us-west-2:721176634889:stateMachine:SerializedBuilds \
+
