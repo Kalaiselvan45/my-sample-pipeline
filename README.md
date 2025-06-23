@@ -37,4 +37,3 @@ aws cloudformation deploy \
     GitHubRepo=my-sample-pipeline \
     GitHubBranch=main \
     GitHubOAuthTokenSecretArn=arn:aws:codeconnections:us-west-2:721176634889:connection/1973e4cf-84bd-4aae-b2cb-55b0573021ff
-
