@@ -5,5 +5,5 @@ phases:
       - echo "Triggering Step Function"
       - |
         aws stepfunctions start-execution \
-          --state-machine-arn arn:aws:states:REGION:ACCOUNT_ID:stateMachine:SerializedBuilds \
+          --state-machine-arn arn:aws:states:us-west-2:721176634889:stateMachine:TriggerCodebuild \
           --input "{\"commit_id\": \"$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION)\", \"repo\": \"$CODEBUILD_SOURCE_REPO_URL\"}"
