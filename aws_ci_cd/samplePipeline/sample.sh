@@ -1,7 +1,7 @@
 #!/bin/bash
-set -e
 
-PROJECT_NAME="samplePipeline"
+CURRENT_BUILD_ID="$CODEBUILD_BUILD_ID"
+PROJECT_NAME="sample-sh"
 
 echo "Checking if another $PROJECT_NAME build is running..."
 
@@ -16,8 +16,10 @@ for ID in $BUILD_IDS; do
     --query 'builds[0].buildStatus' \
     --output text)
 
+  echo "Build $ID has status: $STATUS"
+
   if [ "$STATUS" = "IN_PROGRESS" ]; then
-    echo "Another build ($ID) is still in progress."
+    echo "Another build ($ID) is still in progress. Exiting..."
     exit 0
   fi
 done
