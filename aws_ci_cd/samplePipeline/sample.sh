@@ -1,5 +1,4 @@
 #!/bin/bash
-
 CURRENT_BUILD_ID="$CODEBUILD_BUILD_ID"
 PROJECT_NAME="samplePipeline"
 
@@ -25,3 +24,5 @@ for ID in $BUILD_IDS; do
 done
 
 echo "No other builds in progress — continuing."
+echo "Waiting for other builds to finish..."
+sleep 60  
