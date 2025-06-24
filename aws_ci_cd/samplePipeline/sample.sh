@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CURRENT_BUILD_ID="$CODEBUILD_BUILD_ID"
-PROJECT_NAME="sample-sh"
+PROJECT_NAME="samplePipeline"
 
 echo "Checking if another $PROJECT_NAME build is running..."
 
