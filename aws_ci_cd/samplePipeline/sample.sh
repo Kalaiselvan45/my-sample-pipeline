@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+PROJECT_NAME="samplePipeline"
+
 echo "Checking if another $PROJECT_NAME build is running..."
 
 BUILD_IDS=$(aws codebuild list-builds-for-project \
