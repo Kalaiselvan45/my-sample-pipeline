@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - REGION=$(aws configure get region)
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+      - IMAGE_URI="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$ECRRepositoryName"
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $IMAGE_URI
+      - COMMIT_ID=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+      - TIMESTAMP=$(date +%Y%m%d%H%M%S)
+      - BASE_VER="v1.0.0"
+      - IMAGE_TAG="$BASE_VER-$COMMIT_ID-$TIMESTAMP"
+
+  build:
+    commands:
+      - echo Building image...
+      - docker build -t $IMAGE_URI:$IMAGE_TAG .
+
+  post_build:
+    commands:
+      - echo Pushing image...
+      - docker push $IMAGE_URI:$IMAGE_TAG
+      - echo Pushed image: $IMAGE_URI:$IMAGE_TAG
