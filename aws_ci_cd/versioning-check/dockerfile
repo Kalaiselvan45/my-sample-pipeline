@@ -1,2 +1,3 @@
 FROM alpine:latest
-CMD ["echo", "Hello from CodeBuild"]
+COPY aws_ci_cd/versioning-check/ab /usr/local/bin/ab
+ENTRYPOINT ["/usr/local/bin/ab"]

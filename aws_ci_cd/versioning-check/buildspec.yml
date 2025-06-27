@@ -1,57 +1,11 @@
 version: 0.2
-batch:
-  fast-fail: true
-  build-graph:
-    - identifier: build_amd64
-      env:
-        image: aws/codebuild/amazonlinux-x86_64-standard:5.0
-        type: LINUX_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-        variables:
-          ARCH: amd64
-          OS_ARCH: x86_64
-      ignore-failure: false
-
-    - identifier: build_arm64
-      env:
-        image: aws/codebuild/amazonlinux-aarch64-standard:3.0
-        type: ARM_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-        variables:
-          ARCH: arm64
-          OS_ARCH: aarch64
-      ignore-failure: false
-
-    - identifier: create_manifest
-      env:
-        image: aws/codebuild/amazonlinux-x86_64-standard:5.0
-        type: LINUX_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-      depend-on:
-        - build_amd64
-        - build_arm64
-      ignore-failure: false
-
-    - identifier: certify
-      env:
-        image: aws/codebuild/amazonlinux-x86_64-standard:5.0
-        type: LINUX_CONTAINER
-        compute-type: BUILD_GENERAL1_SMALL
-      depend-on:
-        - create_manifest
-      ignore-failure: false
 
 phases:
+  pre_build:
+    commands:
+      - echo "Running build script..."
+      - chmod +x build.sh
+
   build:
     commands:
-      - echo "Running stage: $CODEBUILD_BUILD_ID with ARCH=$ARCH"
-      - $CODEBUILD_SRC_DIR/build.sh
-      # - |
-      #   if [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "build_amd64" || "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "build_arm64" ]]; then
-      #     ./aws_ci_cd/versioning-check/go_build.sh "$ARCH"
-      #   elif [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "create_manifest" ]]; then
-      #     ./aws_ci_cd/versioning-check/create_manifest.sh
-      #   elif [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "certify" ]]; then
-      #     ./aws_ci_cd/versioning-check/certify.sh
-      #   fi
-
+      - ./build.sh
