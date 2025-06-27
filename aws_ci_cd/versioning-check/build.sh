@@ -6,7 +6,6 @@ mkdir -p "$HOME"
 
 # # Load work area and init tools
 eval "$(ab init --mkdirs build)"
-ab go-cache get
 
 # Get semver version (e.g. v1.2.3)
 export IMAGE_TAG=$(ab semver get | tail -n1)
