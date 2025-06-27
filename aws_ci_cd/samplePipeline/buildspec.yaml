@@ -4,4 +4,7 @@ phases:
     commands:
       - pwd
       - ls 
-      
+      - echo $CODEBUILD_SOURCE_REPO_URL
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo "sleeping one minute"
+      - sleep 60
