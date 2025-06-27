@@ -20,7 +20,11 @@ export IMAGE_TAG=v1.0.0
 aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REPO"
 
 # Build and tag Docker image
-docker build -t "$ECR_REPO:$IMAGE_TAG" -t "$ECR_REPO:latest" .
+docker build \
+  -f "$CODEBUILD_SRC_DIR/aws_ci_cd/versioning-check/dockerfile" \
+  -t "$ECR_REPO:$IMAGE_TAG" \
+  -t "$ECR_REPO:latest" \
+  "$CODEBUILD_SRC_DIR"
 docker push "$ECR_REPO:$IMAGE_TAG"
 docker push "$ECR_REPO:latest"
 
