@@ -9,7 +9,7 @@ set -ex
 # ab go-cache get
 
 # Get semver version (e.g. v1.2.3)
-# export IMAGE_TAG=$(ab semver get | tail -n1)
+export IMAGE_TAG=v1.0.0
 # echo "Using image tag: $IMAGE_TAG"
 
 # Build Go binary
