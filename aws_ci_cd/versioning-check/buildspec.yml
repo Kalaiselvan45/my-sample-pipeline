@@ -45,12 +45,13 @@ phases:
   build:
     commands:
       - echo "Running stage: $CODEBUILD_BUILD_ID with ARCH=$ARCH"
-      - |
-        if [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "build_amd64" || "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "build_arm64" ]]; then
-          ./aws_ci_cd/versioning-check/go_build.sh "$ARCH"
-        elif [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "create_manifest" ]]; then
-          ./aws_ci_cd/versioning-check/create_manifest.sh
-        elif [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "certify" ]]; then
-          ./aws_ci_cd/versioning-check/certify.sh
-        fi
+      - $CODEBUILD_SRC_DIR/build.sh
+      # - |
+      #   if [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "build_amd64" || "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "build_arm64" ]]; then
+      #     ./aws_ci_cd/versioning-check/go_build.sh "$ARCH"
+      #   elif [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "create_manifest" ]]; then
+      #     ./aws_ci_cd/versioning-check/create_manifest.sh
+      #   elif [[ "$CODEBUILD_BUILD_GRAPH_IDENTIFIER" == "certify" ]]; then
+      #     ./aws_ci_cd/versioning-check/certify.sh
+      #   fi
 
