@@ -31,14 +31,10 @@ chmod 0600 $HOME/.ssh/known_hosts ~/.ssh/id_rsa
 git config --global url."git@github.com:".insteadof "https://github.com/"
 echo "Git setup completed."
 
-(
-  cd "$CODEBUILD_SRC_DIR/spark/aws-ci-cd/cost-estimator"
-  go build -o "$HOME/build/bin/cost-estimator" .
-)
 
 # Install uber-ab
 (
-  cd "$CODEBUILD_SRC_DIR/spark/aws-ci-cd/amdp-builder/cmd/uber-ab"
+  cd "$CODEBUILD_SRC_DIR/aws_ci_cd/versioning-check/cmd/uber-ab"
   go build -o "$HOME/build/bin/uber-ab" .
   ln -s "$HOME/build/bin/uber-ab" "$HOME/build/bin/ab"
 )
