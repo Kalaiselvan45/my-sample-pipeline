@@ -15,21 +15,21 @@ export GOPATH=$HOME/gopath
 curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C $HOME/build -xz
 go version
 
-echo "Setting up Git SSH configuration..."
-export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_rsa -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+# echo "Setting up Git SSH configuration..."
+# export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_rsa -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
 
-cat > $HOME/.ssh/known_hosts <<EOF
-$CI_GITHUB_SSH_RSA
-EOF
+# cat > $HOME/.ssh/known_hosts <<EOF
+# $CI_GITHUB_SSH_RSA
+# EOF
 
-cat > $HOME/.ssh/id_rsa <<GIT
-$CI_GITHUB_SSH_PRIVATE_KEY
-GIT
+# cat > $HOME/.ssh/id_rsa <<GIT
+# $CI_GITHUB_SSH_PRIVATE_KEY
+# GIT
 
-chmod 0700 $HOME/.ssh
-chmod 0600 $HOME/.ssh/known_hosts ~/.ssh/id_rsa
-git config --global url."git@github.com:".insteadof "https://github.com/"
-echo "Git setup completed."
+# chmod 0700 $HOME/.ssh
+# chmod 0600 $HOME/.ssh/known_hosts ~/.ssh/id_rsa
+# git config --global url."git@github.com:".insteadof "https://github.com/"
+# echo "Git setup completed."
 
 (
   cd "$CODEBUILD_SRC_DIR/spark/aws-ci-cd/cost-estimator"
