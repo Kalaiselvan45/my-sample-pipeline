@@ -7,61 +7,61 @@ Parameters:
     Description: Name of the CodeBuild project
   GitHubOwner:
     Type: String 
-    Description: Github repo owner Name
+    Description: GitHub repo owner name
   GitHubRepo:
     Type: String 
     Description: GitHub repo name 
   GitHubOuthToken:
     Type: String 
-    Description: GitHubOuthToken stored in secerets manager
+    Description: GitHub OAuth token stored in Secrets Manager
     NoEcho: true 
   EcrRepositoryName:
     Type: String 
-    Description: Ecr repo name 
+    Description: ECR repo name 
 
-Resources: 
-    MyECRRepo:
-      Type: AWS::ECR::Repository
-      Properties:
-        RepositoryName: !Ref ECRRepositoryName
-    
-    CodeBuildServiceRole:
-      Type: AWS::IAM::Role
-      Properties:
-        RoleName: CodeBuildServiceRole
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: codebuild.amazonaws.com
-              Action: sts:AssumeRole
-        ManagedPolicyArns:
-          - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
-          - arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess
-
-CodeBuildProject:
-    Type: AWS::CodeBuild::Project
+Resources:
+  MyECRRepo:
+    Type: AWS::ECR::Repository
     Properties:
-      Name: SemanticVersionImageBuilder
-      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
-      Artifacts:
-        Type: NO_ARTIFACTS
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/standard:6.0
-        Type: LINUX_CONTAINER
-        PrivilegedMode: true  # Required for Docker
-      Source:
-        Type: GITHUB
-        Location: !Sub https://github.com/${GitHubOwner}/${GitHubRepo}.git
-        GitCloneDepth: 1
-        BuildSpec: buildspec.yml
-        ReportBuildStatus: true
-        Auth:
-          Type: OAUTH
-          Resource: !Ref GitHubOAuthToken
-      TimeoutInMinutes: 10
+      RepositoryName: !Ref EcrRepositoryName
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      # OPTIONAL: Remove RoleName to avoid naming conflict errors
+      # RoleName: CodeBuildServiceRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+        - arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess
+
+  CodeBuildProject:
+      Type: AWS::CodeBuild::Project
+      Properties:
+        Name: SemanticVersionImageBuilder
+        ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+        Artifacts:
+          Type: NO_ARTIFACTS
+        Environment:
+          ComputeType: BUILD_GENERAL1_SMALL
+          Image: aws/codebuild/standard:6.0
+          Type: LINUX_CONTAINER
+          PrivilegedMode: true  # Required for Docker
+        Source:
+          Type: GITHUB
+          Location: https://github.com/Kalaiselvan45/my-sample-pipeline
+          GitCloneDepth: 1
+          BuildSpec: buildspec.yml
+          Auth:
+            Type: OAUTH
+            Resource: !Ref GitHubOuthToken
+        TimeoutInMinutes: 10
 
 Outputs:
   CodeBuildProjectName:

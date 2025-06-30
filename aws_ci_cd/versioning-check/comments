@@ -1,0 +1,10 @@
+aws cloudformation deploy \
+  --template-file pipeline.yaml \
+  --stack-name semantic-image-builder \
+  --capabilities CAPABILITY_NAMED_IAM --profile aqfer-dev-sso --region us-west-2\
+  --parameter-overrides \
+      GitHubOwner=kalaiselvan45 \
+      GitHubRepo=my-sample-pipeline \
+      GitHubOuthToken=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 \ 
+      EcrRepositoryName=testing-version \
+      ProjectName=semantic-versioning
