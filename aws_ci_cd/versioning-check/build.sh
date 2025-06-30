@@ -5,7 +5,8 @@ export HOME=/tmp/home
 mkdir -p "$HOME"
 
 # # Load work area and init tools
-eval "$(ab init --mkdirs build)"
+# eval "$(ab init --mkdirs build)"
+echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
 # Get semver version (e.g. v1.2.3)
 export IMAGE_TAG=$(ab semver get | tail -n1)
@@ -24,5 +25,5 @@ docker build \
 docker push "$ECR_REPO:$IMAGE_TAG"
 docker push "$ECR_REPO:latest"
 
-Put semver (confirm version used)
-ab semver put
+# Put semver (confirm version used)
+# ab semver put
