@@ -1,3 +1,6 @@
-FROM alpine:latest
-COPY aws_ci_cd/versioning-check/ab /usr/local/bin/ab
-ENTRYPOINT ["/usr/local/bin/ab"]
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal
+
+# Copy tools to /usr/local
+COPY . /usr/local/
+
+RUN ln -sf /usr/local/bin/uber-ab /usr/local/bin/ab
