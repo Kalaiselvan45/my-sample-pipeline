@@ -1,3 +1,3 @@
 FROM 721176634889.dkr.ecr.us-west-2.amazonaws.com/testing-version1
 
-COPY /Users/kalai/Downloads/Migrate-aqfer-repo/dev-concurrent-build/my-sample-pipeline/aws_ci_cd/versioning-check/ab /bin/
+COPY aws_ci_cd/versioning-check/ab /bin/

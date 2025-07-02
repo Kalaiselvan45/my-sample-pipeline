@@ -20,7 +20,7 @@ echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
 # Get semver version (e.g. v1.2.3)
 # export IMAGE_TAG="v3.0.0-$(date +%Y%m%d%H%M%S)-$(git rev-parse --short $CODEBUILD_RESOLVED_SOURCE_VERSION)"
-export IMAGE_TAG=$(ab semver get | tail -n1)
+export IMAGE_TAG=v1.2.0
 echo "Using image tag: $IMAGE_TAG"
 
 
