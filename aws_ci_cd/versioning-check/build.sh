@@ -20,8 +20,8 @@ echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
 # Get semver version (e.g. v1.2.3)
 # export IMAGE_TAG="v3.0.0-$(date +%Y%m%d%H%M%S)-$(git rev-parse --short $CODEBUILD_RESOLVED_SOURCE_VERSION)"
-export IMAGE_TAG=$(ab semver get | tail -n1)
-echo "Using image tag: $IMAGE_TAG"
+# export IMAGE_TAG=$(ab semver get | tail -n1)
+# echo "Using image tag: $IMAGE_TAG"
 
 
 # Docker login
@@ -33,6 +33,10 @@ docker build \
   -t "$ECR_REPO:$IMAGE_TAG" \
   -t "$ECR_REPO:latest" \
   "$CODEBUILD_SRC_DIR"
+
+export IMAGE_TAG=$(ab semver get | tail -n1)
+echo "Using image tag: $IMAGE_TAG"
+
 docker push "$ECR_REPO:$IMAGE_TAG"
 docker push "$ECR_REPO:latest"
 
