@@ -28,7 +28,7 @@ docker build \
   "$CODEBUILD_SRC_DIR"
 
 # Run `ab semver get` from inside the image to generate the tag
-export IMAGE_TAG=$(docker run --rm "$ECR_REPO:latest" ab semver get | tail -n1)
+export IMAGE_TAG=$(ab semver get | tail -n1)
 echo "Using image tag: $IMAGE_TAG"
 
 # Tag the image with semantic version
