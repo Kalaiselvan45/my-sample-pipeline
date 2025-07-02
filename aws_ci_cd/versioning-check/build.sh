@@ -15,35 +15,12 @@ export GOPATH=$HOME/gopath
 curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C $HOME/build -xz
 go version
 
-echo "Setting up Git SSH configuration..."
-export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_rsa -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
-
-cat > $HOME/.ssh/known_hosts <<EOF
-$CI_GITHUB_SSH_RSA
-EOF
-
-cat > $HOME/.ssh/id_rsa <<GIT
-$CI_GITHUB_SSH_PRIVATE_KEY
-GIT
-
-chmod 0700 $HOME/.ssh
-chmod 0600 $HOME/.ssh/known_hosts ~/.ssh/id_rsa
-git config --global url."git@github.com:".insteadof "https://github.com/"
-echo "Git setup completed."
-
-
-# Install uber-ab
-(
-  cd "$CODEBUILD_SRC_DIR/aws_ci_cd/versioning-check/cmd/uber-ab"
-  go build -o "$HOME/build/bin/uber-ab" .
-  ln -s "$HOME/build/bin/uber-ab" "$HOME/build/bin/ab"
-)
-
 # eval "$(ab init --mkdirs build)"
 echo $CODEBUILD_RESOLVED_SOURCE_VERSION
 
 # Get semver version (e.g. v1.2.3)
-export IMAGE_TAG="v3.0.0-$(date +%Y%m%d%H%M%S)-$(git rev-parse --short $CODEBUILD_RESOLVED_SOURCE_VERSION)"
+# export IMAGE_TAG="v3.0.0-$(date +%Y%m%d%H%M%S)-$(git rev-parse --short $CODEBUILD_RESOLVED_SOURCE_VERSION)"
+export IMAGE_TAG=$(ab semver get | tail -n1)
 echo "Using image tag: $IMAGE_TAG"
 
 
