@@ -24,3 +24,16 @@ aws cloudformation deploy \
     GitHubRepo=my-sample-pipeline \
     GitHubBranch=main \
     GitHubOAuthTokenSecretArn=arn:aws:codeconnections:us-west-2:721176634889:connection/1973e4cf-84bd-4aae-b2cb-55b0573021ff
+
+
+aws cloudformation deploy \
+  --template-file pipeline.yaml \
+  --stack-name CodebuildStack \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --region us-west-2 --profile aqfer-dev-sso\
+  --parameter-overrides \
+    ProjectName=TriggerBuild \
+    GitHubOwner=Kalaiselvan45 \
+    GitHubRepo=my-sample-pipeline \
+    GitHubBranch=main \
+    GitHubOAuthTokenSecretArn=arn:aws:codeconnections:us-west-2:721176634889:connection/1973e4cf-84bd-4aae-b2cb-55b0573021ff

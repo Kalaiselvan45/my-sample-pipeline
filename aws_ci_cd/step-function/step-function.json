@@ -1,0 +1,21 @@
+{
+    "Comment": "Start CodeBuild project without overrides",
+    "StartAt": "RunBuild",
+    "States": {
+      "RunBuild": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::codebuild:startBuild.sync",
+        "Parameters": {
+          "ProjectName": "samplePipeline",
+          "EnvironmentVariablesOverride": [
+              {
+                "Name": "COMMIT_ID",
+                "Value.$": "$.commit_id",
+                "Type": "PLAINTEXT"
+              }
+            ]
+        },
+        "End": true
+      }
+    }
+  }
